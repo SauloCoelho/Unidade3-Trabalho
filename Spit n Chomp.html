@@ -1,0 +1,939 @@
+  <!doctype html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8" />
+      <title>Spit n Chomp (Made by Phaser 3)</title>
+      <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+      <style type="text/css">
+          body {
+              margin:0;
+          }
+      </style>
+  </head>
+  <body>
+
+
+  <script type="text/javascript">
+
+  var config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      physics: {
+          default: 'arcade',
+            arcade: {
+              gravity: { y: 250 },
+              debug: false
+          }
+      },
+      scene: {
+          preload: preload,
+          create: create,
+          update: update
+      }
+  };
+  var player2;
+  var player;
+
+  var hamburguer;
+  var aboboras;
+  var chocolates;
+  var cogumelos;
+  var paos;
+  var ovos;
+  var pizzas;
+  var cookies;
+
+  var bolaFogo;
+  var bombas;
+
+  var platforms;
+
+  var cursors;
+
+  var score = 0;
+  var score2 =0;
+
+  var vida = 5;
+  var vida2 = 5;
+
+  var playerText;
+  var player2Text;
+  var scoreText;
+  var vidaText;
+  var scoreText2;
+  var vida2Text2;
+  var endText;
+
+  var contFogo = 50;
+
+  var music;
+
+  var gameOver = false;
+
+  var game = new Phaser.Game(config);
+
+  function preload ()
+  {
+      this.load.image('fundo', 'assets/BG_1.png');
+      this.load.image('fundo2', 'assets/BG_2.png');
+      this.load.image('fundoFim', 'assets/fundoFim.png');
+
+      this.load.image('ground', 'assets/plataformaBg1.png');
+      this.load.image('ground2', 'assets/plataformaBg2.png');
+
+      this.load.image('abobora', 'assets/abobora.png');
+      this.load.image('burguer', 'assets/burguer.png');
+      this.load.image('chocolate', 'assets/chocolate.png');
+      this.load.image('cogumelo', 'assets/cogumelo.png');
+      this.load.image('cookie', 'assets/cookie.png');
+      this.load.image('ovo', 'assets/ovo.png');
+      this.load.image('pao', 'assets/pao.png');
+      this.load.image('pizza', 'assets/pizza.png');
+
+      this.load.image('bomba', 'assets/bomba.png');
+      this.load.image('BolaDeFogo', 'assets/BolaDeFogo.png');
+
+      this.load.spritesheet('dragon2', 'assets/dragon2.png', { frameWidth: 32, frameHeight: 48 });
+      this.load.spritesheet('dragon', 'assets/dragon.png', { frameWidth: 32, frameHeight: 48 });
+
+      this.load.audio('track1', 'assets/tema1.wav');
+      this.load.audio('track2', 'assets/tema2.wav');
+
+      this.load.audio('effect1', 'assets/fireball.wav');
+      this.load.audio('effect2', 'assets/mordida.wav');
+      this.load.audio('effect3', 'assets/hurt.wav');
+      this.load.audio('effect4', 'assets/GG.wav');
+
+  }
+
+  function create ()
+  {
+      //  A simple background for our game
+      this.add.image(400, 300, 'fundo');
+
+      //musica de fundo
+      this.sound.play('track1');
+
+      //  The platforms group contains the ground and the 2 ledges we can jump on
+      platforms = this.physics.add.staticGroup();
+
+      // The player and its settings
+      player = this.physics.add.sprite(410, 600, 'dragon');
+      //  Player physics properties. Give the little guy a slight bounce.
+      player.setBounce(0.2);
+      player.setCollideWorldBounds(true);
+
+      this.anims.create({
+          key: 'left',
+          frames: this.anims.generateFrameNumbers('dragon', { start: 0, end: 3 }),
+          frameRate: 10,
+          repeat: -1
+      });
+
+      this.anims.create({
+          key: 'turn',
+          frames: [ { key: 'dragon', frame: 4 } ],
+          frameRate: 20
+      });
+
+      this.anims.create({
+          key: 'right',
+          frames: this.anims.generateFrameNumbers('dragon', { start: 5, end: 8 }),
+          frameRate: 10,
+          repeat: -1
+      });
+
+
+      //player 2
+      player2 = this.physics.add.sprite(390, 600, 'dragon2');
+      player2.setBounce(0.2);
+      player2.setCollideWorldBounds(true);
+          //  Our player animations, turning, walking left and walking right.
+
+      this.anims.create({
+          key: 'a',
+          frames: this.anims.generateFrameNumbers('dragon2', { start: 0, end: 3 }),
+          frameRate: 10,
+          repeat: -1
+      });
+
+      this.anims.create({
+          key: 'w',
+          frames: [ { key: 'dragon2', frame: 4 } ],
+          frameRate: 20
+      });
+
+      this.anims.create({
+          key: 'd',
+          frames: this.anims.generateFrameNumbers('dragon2', { start: 5, end: 8 }),
+          frameRate: 10,
+          repeat: -1
+      });
+
+      //  Input Events
+      cursors = this.input.keyboard.createCursorKeys();
+
+      this.W = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+      this.A = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+      this.S = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+      this.D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+
+
+  //criando as comidas;
+      aboboras = this.physics.add.group({
+          key: 'abobora',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      aboboras.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+      cogumelos = this.physics.add.group({
+          key: 'cogumelo',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      cogumelos.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+
+      ovos = this.physics.add.group({
+          key: 'ovo',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      ovos.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+      cookies = this.physics.add.group({
+          key: 'cookie',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      cookies.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+          });
+
+
+      chocolates = this.physics.add.group({
+          key: 'chocolate',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      chocolates.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+      paos = this.physics.add.group({
+          key: 'pao',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      paos.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+      hamburguer = this.physics.add.group({
+          key: 'burguer',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      hamburguer.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+      pizzas = this.physics.add.group({
+          key: 'pizza',
+          repeat: 2,
+          setXY: { x: Phaser.Math.Between(60, 540), y: 0, stepX: Phaser.Math.Between(-300, 300) }
+      });
+
+      pizzas.children.iterate(function (child) {
+
+          //  Give each star a slightly different bounce
+          child.setBounceY(Phaser.Math.FloatBetween(0.8, 1));
+          child.setBounceX(Phaser.Math.FloatBetween(0.4, 0.8));
+          child.setCollideWorldBounds(true);
+          child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+
+      });
+
+      //bomba criada
+      bombas = this.physics.add.group({
+        key: 'bomba',
+        repeat: 0,
+        setXY: { x: Phaser.Math.Between(0, 400), y: 0 }
+    });
+
+      bombas.children.iterate(function (child) {
+
+        //  Give each star a slightly different bounce
+        child.setBounce(1);
+        child.setCollideWorldBounds(true);
+        child.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        child.allowGravity = false;
+
+    });
+
+    bolaFogo = this.physics.add.group({
+      key: 'BolaDeFogo',
+
+  });
+      //  The score and texts
+      playerText = this.add.text(600, 16, 'PLAYER 1', {fontSize: '32px', fill: '#ff471a'})
+      scoreText = this.add.text(600, 60, 'score: 0', { fontSize: '32px', fill: '#000', });
+      vidaText = this.add.text(600, 90, 'vida: 3', { fontSize: '32px', fill: '#000' });
+
+
+      player2Text = this.add.text(16, 16, 'PLAYER 2', {fontSize: '32px', fill: '#007acc'})
+      scoreText2 = this.add.text(16, 60, 'score2: 0', { fontSize: '32px', fill: '#000' });
+      vidaText2 = this.add.text(16, 90, 'vida2: 3', { fontSize: '32px', fill: '#000' });
+
+
+      //colisoes
+      this.physics.add.collider(player, bombas, hitBomb, null, this);
+
+      this.physics.add.overlap(bolaFogo, aboboras, removeAbobora, null, this);
+      this.physics.add.overlap(bolaFogo, hamburguer, removeHamburguer, null, this);
+      this.physics.add.overlap(bolaFogo, chocolates, removeChocolate, null, this);
+      this.physics.add.overlap(bolaFogo, cogumelos, removeCogumelo, null, this);
+      this.physics.add.overlap(bolaFogo, cookies, removeCookie, null, this);
+      this.physics.add.overlap(bolaFogo, ovos, removeOvo, null, this);
+      this.physics.add.overlap(bolaFogo, paos, removePao, null, this);
+      this.physics.add.overlap(bolaFogo, pizzas, removePizza, null, this);
+
+
+      // O player 2 tera interacoes com as comidas, para pontuar
+      this.physics.add.overlap(player2, aboboras, collectAbobora, null, this);
+      this.physics.add.overlap(player2, hamburguer, collectHamburguer, null, this);
+      this.physics.add.overlap(player2, chocolates, collectChocolate, null, this);
+      this.physics.add.overlap(player2, cogumelos, collectCogumelo, null, this);
+      this.physics.add.overlap(player2, cookies, collectCookie, null, this);
+      this.physics.add.overlap(player2, ovos, collectOvo, null, this);
+      this.physics.add.overlap(player2, paos, collectPao, null, this);
+      this.physics.add.overlap(player2, pizzas, collectPizza, null, this);
+
+      this.physics.add.overlap(player2, bolaFogo, collectBolaFogoP2, null, this);
+      this.physics.add.collider(player2, bombas, hitBomb2, null, this);
+
+  }
+
+  function update ()
+  {
+      if (gameOver)
+      {
+          return;
+      }
+
+      if (cursors.left.isDown)
+      {
+          player.setVelocityX(-160);
+
+          player.anims.play('left', true);
+      }
+      else if (cursors.right.isDown)
+      {
+          player.setVelocityX(160);
+
+          player.anims.play('right', true);
+
+
+      }
+      else
+      {
+          player.setVelocityX(0);
+
+          player.anims.play('turn');
+      }
+
+      if (cursors.up.isDown)
+      {
+        if(contFogo > 0){
+
+        var bolaDeFogo = bolaFogo.create(player.x, player.y, 'BolaDeFogo');
+        bolaDeFogo.setBounce(0);
+        bolaDeFogo.setCollideWorldBounds(false);
+        bolaDeFogo.setVelocity(0, 0);
+        bolaDeFogo.allowGravity = false;
+
+        bolaDeFogo.setVelocityY(-800);
+
+        contFogo--;
+  }
+
+      }
+
+      //player 2 check
+  if(this.A.isDown){
+      player2.setVelocityX(-160);
+      player2.anims.play('a', true);
+  }
+
+  else if(this.D.isDown){
+      player2.setVelocityX(160);
+      player2.anims.play('d', true);
+      //console.log("D");
+
+  }else{
+      player2.setVelocityX(0);
+      player2.anims.play('w');
+  }
+
+  if(this.W.isDown){
+
+      player2.setVelocityY(-100);
+  }
+
+
+  if(aboboras.countActive(true) === 0 && hamburguer.countActive(true) === 0 && pizzas.countActive(true) === 0
+  && cookies.countActive(true) === 0 && cogumelos.countActive(true) === 0 && chocolates.countActive(true) === 0
+  && ovos.countActive(true) === 0 && paos.countActive(true) === 0){
+    if(score > score2){
+      endText = this.add.text(250, 550, 'Player 1 Venceu!', { fontSize: '32px', fill: '#ff471a' });
+      this.physics.pause();
+
+      player2.setTint(0xff0000);
+
+      player2.anims.play('w');
+
+    }
+    if(score2 > score){
+      endText = this.add.text(250, 550, 'Player 2 Venceu!', { fontSize: '32px', fill: '#007acc' });
+      this.physics.pause();
+
+      player.setTint(0xff0000);
+
+      player.anims.play('turn');
+
+    }if(score == score2){
+      endText = this.add.text(450, 550, 'EMPATE', { fontSize: '32px', fill: '#000' });
+
+    }
+    this.add.image(400, 300, 'fundoFim');
+
+
+    this.sound.setMute(true);
+
+    gameOver = true;
+  }
+
+  }
+
+
+  //Interacoes do player;
+  function hitBomb (player, bomba)
+  {
+      bomba.disableBody(true, true);
+      this.sound.play('effect3');
+
+      vida--;
+      vidaText.setText('vida: ' + vida);
+
+      score = score - 10;
+      scoreText.setText('score: ' + score);
+
+      if(vida == 0){
+        this.physics.pause();
+
+        player.setTint(0xff0000);
+
+        player.anims.play('turn');
+
+        this.add.image(400, 300, 'fundoFim');
+
+
+        this.sound.setMute(true);
+
+        endText = this.add.text(250, 250, 'Player 2 Venceu!', { fontSize: '32px', fill: '#007acc' });
+
+
+      gameOver = true;
+
+
+    }
+  }
+
+  function removeAbobora (BolaDeFogo, abobora)
+  {
+      abobora.disableBody(true, true);
+      BolaDeFogo.disableBody(true, true);
+      this.sound.play('effect1');
+
+
+      //  Add and update the score
+      score += 20;
+      scoreText.setText('Score: ' + score);
+
+      contFogo += 1;
+    }
+
+    function removeHamburguer (BolaDeFogo, burguer)
+    {
+        burguer.disableBody(true, true);
+        BolaDeFogo.disableBody(true,true);
+        this.sound.play('effect1');
+
+
+        //  Add and update the score
+        score += 20;
+        scoreText.setText('Score: ' + score);
+        contFogo += 1;
+      }
+
+      function removeOvo (BolaDeFogo, ovo)
+      {
+          ovo.disableBody(true, true);
+          BolaDeFogo.disableBody(true, true);
+          this.sound.play('effect1');
+
+          //  Add and update the score
+          score += 20;
+          scoreText.setText('Score: ' + score);
+          contFogo += 1;
+        }
+
+        function removePao (BolaDeFogo, pao)
+        {
+          pao.disableBody(true, true);
+          BolaDeFogo.disableBody(true, true);
+          this.sound.play('effect1');
+
+          //  Add and update the score
+          score += 20;
+          scoreText.setText('Score: ' + score);
+          contFogo += 1;
+          }
+
+          function removePizza (BolaDeFogo, pizza)
+          {
+            pizza.disableBody(true, true);
+            BolaDeFogo.disableBody(true, true);
+            this.sound.play('effect1');
+
+            //  Add and update the score
+            score += 20;
+            scoreText.setText('Score: ' + score);
+            contFogo += 1;
+            }
+            function removeCookie (BolaDeFogo, cookie)
+            {
+              cookie.disableBody(true, true);
+              BolaDeFogo.disableBody(true, true);
+              this.sound.play('effect1');
+
+              //  Add and update the score
+              score += 20;
+              scoreText.setText('Score: ' + score);
+              contFogo += 1;
+              }
+
+              function removeCogumelo (BolaDeFogo, cogumelo)
+              {
+                cogumelo.disableBody(true, true);
+                BolaDeFogo.disableBody(true, true);
+                this.sound.play('effect1');
+
+                //  Add and update the score
+                score += 20;
+                scoreText.setText('Score: ' + score);
+                contFogo += 1;
+                }
+
+                function removeChocolate (BolaDeFogo, chocolate)
+                {
+                  chocolate.disableBody(true, true);
+                  BolaDeFogo.disableBody(true, true);
+                  this.sound.play('effect1');
+
+                  //  Add and update the score
+                  score += 20;
+                  scoreText.setText('Score: ' + score);
+                  contFogo += 1;
+                  }
+
+
+
+
+  //player 2 funcoes
+
+  function collectBolaFogoP2 (player2, BolaDeFogo)
+  {
+      BolaDeFogo.disableBody(true, true);
+      this.sound.play('effect2');
+
+
+      //  Add and update the score
+      score2 += 1;
+      scoreText2.setText('Score2: ' + score2);
+
+  }
+
+  function collectAbobora (player2, abobora)
+  {
+      abobora.disableBody(true, true);
+      this.sound.play('effect2');
+
+
+      //  Add and update the score
+      score2 += 10;
+      scoreText2.setText('Score2: ' + score2);
+
+      score -= 5;
+      scoreText.setText('Score: ' + score);
+
+      if(score2 < 50){
+
+        var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+          var abobora = aboboras.create(x, 16, 'abobora');
+          abobora.setBounce(1);
+          abobora.setCollideWorldBounds(true);
+          abobora.setVelocity(Phaser.Math.Between(-200, 200), 20);
+          abobora.allowGravity = false;
+        }
+
+
+  var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+        var bomba = bombas.create(x, 16, 'bomba');
+        bomba.setBounce(1);
+        bomba.setCollideWorldBounds(true);
+        bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        bomba.allowGravity = false;
+
+    }
+
+    function collectPizza (player2, pizza)
+    {
+        pizza.disableBody(true, true);
+        this.sound.play('effect2');
+
+
+        //  Add and update the score
+        score2 += 10;
+        scoreText2.setText('Score2: ' + score2);
+
+        score -= 5;
+        scoreText.setText('Score: ' + score);
+
+        if(score2 < 50){
+
+          var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+            var pizza = pizzas.create(x, 16, 'pizza');
+            pizza.setBounce(1);
+            pizza.setCollideWorldBounds(true);
+            pizza.setVelocity(Phaser.Math.Between(-200, 200), 20);
+            pizza.allowGravity = false;
+          }
+
+
+    var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+          var bomba = bombas.create(x, 16, 'bomba');
+          bomba.setBounce(1);
+          bomba.setCollideWorldBounds(true);
+          bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+          bomba.allowGravity = false;
+
+      }
+
+    function collectChocolate (player2, chocolate)
+    {
+        chocolate.disableBody(true, true);
+        this.sound.play('effect2');
+
+
+        //  Add and update the score
+        score2 += 10;
+        scoreText2.setText('Score2: ' + score2);
+
+        score -= 5;
+        scoreText.setText('Score: ' + score);
+
+        if(score2 < 50){
+
+          var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+            var chocolate = chocolates.create(x, 16, 'chocolate');
+            chocolate.setBounce(1);
+            chocolate.setCollideWorldBounds(true);
+            chocolate.setVelocity(Phaser.Math.Between(-200, 200), 20);
+            chocolate.allowGravity = false;
+          }
+
+
+    var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+          var bomba = bombas.create(x, 16, 'bomba');
+          bomba.setBounce(1);
+          bomba.setCollideWorldBounds(true);
+          bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+          bomba.allowGravity = false;
+
+      }
+
+      function collectCogumelo (player2, cogumelo)
+      {
+          cogumelo.disableBody(true, true);
+          this.sound.play('effect2');
+
+
+          //  Add and update the score
+          score2 += 10;
+          scoreText2.setText('Score2: ' + score2);
+
+          score -= 5;
+          scoreText.setText('Score: ' + score);
+
+          if(score2 < 50){
+
+            var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+              var cogumelo = cogumelos.create(x, 16, 'cogumelo');
+              cogumelo.setBounce(1);
+              cogumelo.setCollideWorldBounds(true);
+              cogumelo.setVelocity(Phaser.Math.Between(-200, 200), 20);
+              cogumelo.allowGravity = false;
+            }
+
+
+      var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+            var bomba = bombas.create(x, 16, 'bomba');
+            bomba.setBounce(1);
+            bomba.setCollideWorldBounds(true);
+            bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+            bomba.allowGravity = false;
+
+        }
+
+        function collectPao (player2, pao)
+        {
+            pao.disableBody(true, true);
+            this.sound.play('effect2');
+
+
+            //  Add and update the score
+            score2 += 10;
+            scoreText2.setText('Score2: ' + score2);
+
+            score -= 5;
+            scoreText.setText('Score: ' + score);
+
+            if(score2 < 50){
+
+              var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+                var pao = paos.create(x, 16, 'pao');
+                pao.setBounce(1);
+                pao.setCollideWorldBounds(true);
+                pao.setVelocity(Phaser.Math.Between(-200, 200), 20);
+                pao.allowGravity = false;
+              }
+
+
+        var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+              var bomba = bombas.create(x, 16, 'bomba');
+              bomba.setBounce(1);
+              bomba.setCollideWorldBounds(true);
+              bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+              bomba.allowGravity = false;
+
+          }
+
+        function collectCookie (player2, cookie)
+        {
+            cookie.disableBody(true, true);
+            this.sound.play('effect2');
+
+
+            //  Add and update the score
+            score2 += 10;
+            scoreText2.setText('Score2: ' + score2);
+
+            score -= 5;
+            scoreText.setText('Score: ' + score);
+
+            if(score2 < 50){
+
+              var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+                var cookie = cookies.create(x, 16, 'cookie');
+                cookie.setBounce(1);
+                cookie.setCollideWorldBounds(true);
+                cookie.setVelocity(Phaser.Math.Between(-200, 200), 20);
+                cookie.allowGravity = false;
+              }
+
+
+        var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+              var bomba = bombas.create(x, 16, 'bomba');
+              bomba.setBounce(1);
+              bomba.setCollideWorldBounds(true);
+              bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+              bomba.allowGravity = false;
+
+          }
+
+    function collectHamburguer (player2, burguer)
+    {
+        burguer.disableBody(true, true);
+        this.sound.play('effect2');
+
+
+        //  Add and update the score
+        score2 += 10;
+        scoreText2.setText('Score2: ' + score2);
+
+        score -= 5;
+        scoreText.setText('Score: ' + score);
+
+        if(score2 < 50){
+
+          var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+            var burguer = hamburguer.create(x, 16, 'burguer');
+            burguer.setBounce(1);
+            burguer.setCollideWorldBounds(true);
+            burguer.setVelocity(Phaser.Math.Between(-200, 200), 20);
+            burguer.allowGravity = false;
+          }
+
+
+    var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+          var bomba = bombas.create(x, 16, 'bomba');
+          bomba.setBounce(1);
+          bomba.setCollideWorldBounds(true);
+          bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+          bomba.allowGravity = false;
+
+
+      }
+
+      function collectOvo (player2, ovo)
+      {
+          ovo.disableBody(true, true);
+          this.sound.play('effect2');
+
+
+          //  Add and update the score
+          score2 += 10;
+          scoreText2.setText('Score2: ' + score2);
+
+          score -= 5;
+          scoreText.setText('Score: ' + score);
+
+          if(score2 < 50){
+
+            var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+
+              var ovo = ovos.create(x, 16, 'ovo');
+              ovo.setBounce(1);
+              ovo.setCollideWorldBounds(true);
+              ovo.setVelocity(Phaser.Math.Between(-200, 200), 20);
+              ovo.allowGravity = false;
+            }
+
+
+      var x = (player2.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+            var bomba = bombas.create(x, 16, 'bomba');
+            bomba.setBounce(1);
+            bomba.setCollideWorldBounds(true);
+            bomba.setVelocity(Phaser.Math.Between(-200, 200), 20);
+            bomba.allowGravity = false;
+
+
+        }
+
+
+  function hitBomb2 (player2, bomba)
+  {
+      bomba.disableBody(true, true);
+      this.sound.play('effect3');
+
+      vida2--;
+      vidaText2.setText('vida2: '+ vida2);
+
+      score2 = score2 - 5;
+      scoreText2.setText('score2: ' + score2);
+
+      if(vida2 == 0){
+        this.sound.play('effect4');
+
+        this.physics.pause();
+
+        player2.setTint(0xff0000);
+
+        player2.anims.play('w');
+
+        this.add.image(400, 300, 'fundoFim');
+
+        endText = this.add.text(250, 550, 'Player 1 Venceu!', { fontSize: '32px', fill: '#ff471a' });
+
+
+
+      gameOver = true;
+
+    }
+  }
+  </script>
+
+  </body>
+  </html>
